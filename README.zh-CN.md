@@ -2,8 +2,33 @@
 
 [English](README.md) · **中文**
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Node](https://img.shields.io/badge/node-%3E%3D18-brightgreen.svg)](https://nodejs.org)
+![Dependencies](https://img.shields.io/badge/dependencies-0-brightgreen.svg)
+
 把**本机已登录的 CodeBuddy / WorkBuddy 桌面端会话**（腾讯代码助手），暴露成本地
 **OpenAI 兼容端点**，让任何支持自定义 base URL 的客户端复用你自己的订阅，而不用另买 API key。
+
+```bash
+node workbuddy-bridge.mjs --check     # 读取桌面端登录态，打印账号与 token 到期时间
+node workbuddy-bridge.mjs             # 启动服务 http://127.0.0.1:8790/v1
+curl http://127.0.0.1:8790/health     # -> {"ok":true,...}
+```
+
+**无需安装、无依赖、无配置文件**——只要 Node 18+ 和一个已登录的桌面端。Windows / macOS / Linux 均可。
+
+已对真实后端做过端到端验证（`node verify-bridge.mjs`）：
+
+```
+✅ streaming request returns 200 text/event-stream
+✅ streaming returns native tool_calls
+✅ streaming final chunk carries usage
+✅ non-streaming request returns 200 chat.completion
+✅ non-streaming aggregates content
+✅ finish_reason=stop
+✅ model answers after multi-turn tool results are returned
+   ... 12/12 checks passed
+```
 
 ```
 你的客户端（DeepSeek Harness / Cherry Studio / Open WebUI / 任意 OpenAI SDK）

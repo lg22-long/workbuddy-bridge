@@ -2,9 +2,35 @@
 
 **English** · [中文](README.zh-CN.md)
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Node](https://img.shields.io/badge/node-%3E%3D18-brightgreen.svg)](https://nodejs.org)
+![Dependencies](https://img.shields.io/badge/dependencies-0-brightgreen.svg)
+
 Expose the **CodeBuddy / WorkBuddy desktop session** (Tencent's coding assistant) as a
 local **OpenAI-compatible endpoint**, so any client that accepts a custom base URL can
 use your own subscription instead of a separate API key.
+
+```bash
+node workbuddy-bridge.mjs --check     # reads your desktop session, prints account + token expiry
+node workbuddy-bridge.mjs             # serves http://127.0.0.1:8790/v1
+curl http://127.0.0.1:8790/health     # -> {"ok":true,...}
+```
+
+No install step, no dependencies, no config file — Node 18+ and a signed-in desktop app is
+the whole requirement. Works on Windows, macOS and Linux.
+
+Verified end to end against the live backend (`node verify-bridge.mjs`):
+
+```
+✅ streaming request returns 200 text/event-stream
+✅ streaming returns native tool_calls
+✅ streaming final chunk carries usage
+✅ non-streaming request returns 200 chat.completion
+✅ non-streaming aggregates content
+✅ finish_reason=stop
+✅ model answers after multi-turn tool results are returned
+   ... 12/12 checks passed
+```
 
 ```
 your client (DeepSeek Harness / Cherry Studio / Open WebUI / any OpenAI SDK)
