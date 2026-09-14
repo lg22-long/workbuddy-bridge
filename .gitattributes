@@ -1,0 +1,13 @@
+# Normalize line endings so clones behave the same on every platform.
+* text=auto eol=lf
+
+# Shell scripts MUST keep LF: CRLF makes them fail with "bad interpreter".
+*.sh text eol=lf
+
+# Windows PowerShell scripts are safer with CRLF.
+*.ps1 text eol=crlf
+
+# Binary-ish files: never touch.
+*.png binary
+*.jpg binary
+*.ico binary
