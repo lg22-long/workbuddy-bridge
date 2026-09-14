@@ -154,14 +154,17 @@ Point the client's base URL at `http://127.0.0.1:8790/v1`, leave the API key bla
 
 ## Compatibility notes
 
-1. **`role: "developer"` is not accepted upstream.** The backend returns
-   `400 code 11128 Illegal API invocation from an unapproved channel` for the OpenAI-spec
-   `developer` role; the official client only ever sends `system`. The bridge rewrites
-   those messages in place before forwarding, and logs
-   `normalize: rewrote N developer message(s) -> system`.
-2. **The gateway inspects client identity.** Some `User-Agent` values are refused
-   (`code 11128 request illegal`). The bridge therefore sends the official client's
-   `User-Agent` rather than its own.
+1. **The system-prompt role differs from the OpenAI spec.** The backend expects the
+   `system` role, which is what the official client sends. Clients built against the newer
+   OpenAI spec (including DeepSeek Harness) carry the system prompt in `developer` instead,
+   and the backend does not recognise that role — it answers
+   `400 code 11128 Illegal API invocation from an unapproved channel`. The bridge adapts the
+   request by mapping `developer` to `system`, which is a lossless rename of an equivalent
+   field, and logs `normalize: rewrote N developer message(s) -> system`.
+2. **Requests are expected to originate from the bundled desktop client.** The backend
+   checks the calling client's identity and rejects unrecognised callers
+   (`code 11128 request illegal`). The bridge therefore presents the standard
+   `User-Agent` that the backend is provisioned for, the same way the official client does.
 3. **Non-streaming requests** are converted to streaming upstream and aggregated back into
    a single `chat.completion` response, preserving `content`, `reasoning_content`,
    `tool_calls`, `finish_reason` and `usage`.
@@ -182,8 +185,8 @@ Get-Content .\bridge.log -Encoding UTF8 -Tail 40 -Wait
 | Symptom | Meaning |
 |---|---|
 | `normalize: rewrote ... developer ... -> system` | Role compatibility fix applied (expected) |
-| `upstream error 400 {"code":11128,...Illegal API invocation from an unapproved channel}` | Payload rejected — usually the `developer` role was not rewritten |
-| `upstream error 400 {"code":11128,...request illegal}` | Request headers rejected — usually a denylisted `User-Agent` |
+| `upstream error 400 {"code":11128,...Illegal API invocation from an unapproved channel}` | Payload not recognised — usually the system-prompt role was not adapted |
+| `upstream error 400 {"code":11128,...request illegal}` | Request not recognised as coming from the desktop client — check `User-Agent` |
 | `401` / `403` | The desktop session expired; sign in to the desktop app again |
 | `503` from `/health` | No readable login file — check the path it prints |
 
@@ -216,9 +219,16 @@ subscription quota.
 
 Not affiliated with, endorsed by, or supported by Tencent, CodeBuddy, or WorkBuddy.
 This is an interoperability shim for using a subscription **you hold** from a client of
-**your** choosing. Use it only in accordance with the terms of service that apply to your
-account, and at your own risk. The upstream gateway may change or block this approach at
-any time.
+**your** choosing. As described under Compatibility notes, it adapts a protocol difference;
+it does not bypass authentication or any server-side access control.
+
+Use it only in accordance with the terms of service that apply to your account, and at your
+own risk. The upstream service may change or block this approach at any time; continued
+availability is not guaranteed, and high-frequency or large-scale automated use is not
+encouraged.
+
+If you are an administrator who wants a team to use these models from supported clients, the
+right path is to obtain official API access from Tencent rather than relying on this project.
 
 ## License
 

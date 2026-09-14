@@ -146,11 +146,13 @@ agent-default-model:
 
 ## 兼容性说明
 
-1. **上游不接受 `role: "developer"`**。后端对 OpenAI 新规范的 `developer` 角色直接返回
-   `400 code 11128 Illegal API invocation from an unapproved channel`，而官方客户端只用 `system`。
-   本桥会在转发前就地改写这些消息，并打印 `normalize: rewrote N developer message(s) -> system`。
-2. **网关会检查客户端身份**。部分 `User-Agent` 会被拒（`code 11128 request illegal`）。
-   因此本桥发送官方客户端的 `User-Agent`，而不是自己的。
+1. **系统提示的角色与 OpenAI 规范不一致**。后端要的是 `system` 角色，官方客户端也只发 `system`。
+   而按更新的 OpenAI 规范实现的客户端（包括 DeepSeek Harness）会把系统提示放在 `developer` 角色里，
+   后端不认识这个角色，会返回 `400 code 11128 Illegal API invocation from an unapproved channel`。
+   本桥对此做请求适配：把 `developer` 映射为 `system`——这是等价字段的无损改名——
+   并打印 `normalize: rewrote N developer message(s) -> system`。
+2. **请求被期望来自随附的桌面客户端**。后端会校验调用方身份，不认识的调用方会被拒
+   （`code 11128 request illegal`）。因此本桥呈现后端已配置的标准 `User-Agent`，与官方客户端做法一致。
 3. **非流式请求**会被内部转成流式，再聚合回单个 `chat.completion` 响应，
    保留 `content`、`reasoning_content`、`tool_calls`、`finish_reason` 和 `usage`。
 4. **`reasoningEffort`** 只是请求侧提示；实际思考档位由后端每个模型的 `supportedEfforts` 决定。
@@ -168,8 +170,8 @@ Get-Content .\bridge.log -Encoding UTF8 -Tail 40 -Wait
 | 现象 | 含义 |
 |---|---|
 | `normalize: rewrote ... developer ... -> system` | 角色兼容修复已生效（正常） |
-| `upstream error 400 {"code":11128,...Illegal API invocation from an unapproved channel}` | 负载被拒——通常是 `developer` 角色没被改写 |
-| `upstream error 400 {"code":11128,...request illegal}` | 请求头被拒——通常是 UA 命中黑名单 |
+| `upstream error 400 {"code":11128,...Illegal API invocation from an unapproved channel}` | 负载未被识别——通常是系统提示角色没被适配 |
+| `upstream error 400 {"code":11128,...request illegal}` | 请求未被识别为来自桌面客户端——检查 `User-Agent` |
 | `401` / `403` | 桌面端会话已过期，重新登录桌面端 |
 | `/health` 返回 `503` | 读不到登录文件——看它打印的路径对不对 |
 
@@ -196,8 +198,13 @@ Get-Content .\bridge.log -Encoding UTF8 -Tail 40 -Wait
 ## 免责声明
 
 本项目与腾讯、CodeBuddy、WorkBuddy 无任何关联，未获其认可或支持。
-这是一个互操作性适配层，用途是让**你自己合法持有**的订阅，能在**你自己选择**的客户端里使用。
-请仅在遵守你账号适用服务条款的前提下使用，风险自负。上游网关可能随时变更或阻断此方式。
+这是一个互操作性适配层，用途是让**你自己合法持有**的订阅，能在**你自己选择**的客户端里使用——
+正如「兼容性说明」所述，它做的是协议差异适配，并不会绕过任何鉴权、也不会绕过任何服务端的访问控制。
+
+请仅在遵守你账号适用服务条款的前提下使用，风险自负。上游网关可能随时变更或阻断此方式，
+本项目不保证持续可用，也不鼓励高频或自动化的大规模调用。
+
+如果你是企业管理员，希望让团队在受支持的客户端里使用这些模型，正确做法是联系腾讯获取官方 API 访问方式，而不是依赖本项目。
 
 ## 许可证
 
