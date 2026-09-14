@@ -1,0 +1,40 @@
+﻿{
+  "name": "workbuddy-bridge",
+  "version": "1.0.0",
+  "description": "Expose the CodeBuddy / WorkBuddy desktop session as a local OpenAI-compatible endpoint.",
+  "type": "module",
+  "license": "MIT",
+  "bin": {
+    "workbuddy-bridge": "workbuddy-bridge.mjs"
+  },
+  "files": [
+    "workbuddy-bridge.mjs",
+    "start-workbuddy-bridge.sh",
+    "start-workbuddy-bridge.ps1",
+    "verify-bridge.mjs",
+    "verify-fix.mjs",
+    "README.md",
+    "README.zh-CN.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "start": "node workbuddy-bridge.mjs",
+    "check": "node workbuddy-bridge.mjs --check",
+    "verify": "node verify-bridge.mjs && node verify-fix.mjs"
+  },
+  "keywords": [
+    "codebuddy",
+    "workbuddy",
+    "openai-compatible",
+    "proxy",
+    "bridge",
+    "tencent"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lg22-long/workbuddy-bridge.git"
+  }
+}

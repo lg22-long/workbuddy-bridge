@@ -1,0 +1,14 @@
+# Logs (contain the signed-in user id; never commit)
+bridge.log
+bridge.error.log
+*.log
+
+# Local credential and settings material
+.env
+*.info
+.credentials.yaml
+settings.yaml
+backup-*.yaml
+
+# Temp write-back artefacts
+*.bridge-tmp
